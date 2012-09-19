@@ -104,6 +104,13 @@ if ($handle) {
             $primary_keys[$table] = $m[1];
         }
 
+        // 16進数表記の変更 0xXXXX -> X'XXXX'::integer （註：文字列型のとき問題）
+        $hex_pattern = "(.+)0x([0-9a-fA-F]+)(.*)";
+        $buffer = preg_replace("/$hex_pattern/", "\\1X'\\2'::integer\\3", $buffer);
+
+        // UNIX_TIMESTAMP() -> extract(epoch from now())
+        $buffer = str_replace("UNIX_TIMESTAMP()", "extract(epoch from now())", $buffer);
+
         // KEY(xxx) は削除。CREATE INDEX 用に管理。
         $key_pattern = "\s*KEY\s*\((.+)\)";
         if(preg_match("/$key_pattern/", $buffer, $m) && !preg_match("/UNIQUE/", $buffer)){
